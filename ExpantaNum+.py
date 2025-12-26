@@ -527,11 +527,9 @@ def tetration(a, r, do=False):
             end = x1**end
             y_floor -= 1
             skip += 1
-    except OverflowError:
-        end = power(x1, end)
-        end = power(x1, end)[1]
-    if do == True: return correct([0, end, y_floor + 3])[0]
-    return correct([0, end, y_floor + 3])
+    except OverflowError: end *= _log10(x1)
+    if do == True: return correct([0, end, y_floor])[0]
+    return correct([0, end, y_floor])
 def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
     r = tofloat2(r)
     t = correct(t)
