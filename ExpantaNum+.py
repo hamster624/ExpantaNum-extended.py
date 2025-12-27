@@ -30,7 +30,7 @@ def correct(x):
     if isinstance(x, (int, float)): return correct([0 if x >= 0 else 1, abs(x)])
 
     if isinstance(x, str):
-        try: x =correct(float(x))
+        try: return correct(float(x))
         except: pass
         s = x.strip()
         s = s.replace("1e", "e")
@@ -527,9 +527,11 @@ def tetration(a, r, do=False):
             end = x1**end
             y_floor -= 1
             skip += 1
-    except OverflowError: end *= _log10(x1)
-    if do == True: return correct([0, end, y_floor])[0]
-    return correct([0, end, y_floor])
+    except OverflowError:
+        end = power(x1, end)
+        end = power(x1, end)[1]
+    if do == True: return correct([0, end, y_floor + 3])[0]
+    return correct([0, end, y_floor + 3])
 def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
     r = tofloat2(r)
     t = correct(t)
@@ -635,7 +637,7 @@ def arrow(base, arrows, n, a_arg=0, prec=precise_arrow):
     return correct(res)
 def expansion(a, b):
     a, b = correct(a), correct(b)
-    float_b = tofloat(b)
+    float_b = tofloat2(b)
     if a[0][0] == 1 or b[0][0] == 1: raise ValueError("Expansion undefined for negative numbers")
     if eq(b, 0): raise ValueError("2nd expansion number can't be 0")
     if eq(a, 1): return [[0, 1], 0, 0, 0]
@@ -751,6 +753,7 @@ def format(num, decimals=decimals, small=False):
             else: bottom = _log10(nextToTopJ)
             if nextToTopJ >= 1e10: top = 2
             else: top = 1
+            print(bottom)
         return format(1+ _log10(_log10(bottom)+top),precision4) + "L" + comma_format(num_correct[3]+2)
     elif num_correct[2] > MAX_SAFE_INT: return "K" + format(num_correct[2])
     elif num_correct[2] != 0 and num_correct[2] < 4: return "J" * num_correct[2] + format(num_correct[:2] + [0])
@@ -781,7 +784,8 @@ def hyper_e(x):
     arr = correct(x)
     sign = "-" if arr[0][0] == 1 else ""
     if arr[2] != 0 or arr[3] != 0: raise NotImplementedError("Hyper-e not implemented for numbers above 10{9007199254740991}10")
-    if arr[1] != 0: return sign + "E10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1])
+    if arr[1] == 0: arr[1] = len(arr[0])
+    if arr[1] >= 10: return sign + "E10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1]-1)
     arr = arr[0]
     sign = "-" if arr[0] == 1 else ""
     if len(arr) > 3:
