@@ -523,7 +523,7 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         arr_n = correct(n)[0]
         target_len = r + 2
         arr_res = arr_n + [0] * (target_len - len(arr_n))
-        arr_res[-1] = 1
+        arr_res[-1] += 1
         return correct(arr_res)
 
     if s_t is None:
@@ -532,8 +532,8 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         arr_res = arr_t + [0] * (target_len - len(arr_t))
         if abs(s - round(s)) < 1e-12:
             val = max(0, int(round(s)) - 1)
-            arr_res[-1] = val
-        else: arr_res[-1] = 1
+            arr_res[-1] += val
+        else: arr_res[-1] += 1
         return correct(arr_res)
     thr_r = [0, MAX_SAFE_INT, 1]
 
