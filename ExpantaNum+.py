@@ -649,9 +649,9 @@ def logbase(a,b):
 def ln(a): return multiply(log(a),2.302585092994046) # log10(a)/log10(e) or log10(a)*(1/log10(e))
 def sqrt(a): return root(a,2)
 def root(a,b): 
-    if lt(b,[[0, 0], 0, 0]): raise ValueError("Can't root a negative")
-    if gt(b,[[0, 0], 0, 0]) and lt(b,[[0, 1], 0, 0]): return power(a,divide(1,b))
-    if eq(b, [[0, 0], 0, 0]): raise ValueError("Root of 0 is undefined")
+    if lt(b,[[0, 0], 0, 0, 0]): raise ValueError("Can't root a negative")
+    if gt(b,[[0, 0], 0, 0, 0]) and lt(b,[[0, 1], 0, 0, 0]): return power(a,divide(1,b))
+    if eq(b, [[0, 0], 0, 0, 0]): raise ValueError("Root of 0 is undefined")
     return addlayer(divide(log(a),b))
 def exp(x): return power(2.718281828459045, x)
 def format(num, decimals=decimals, small=False):
@@ -749,18 +749,23 @@ def format(num, decimals=decimals, small=False):
         pol = polarize(n, True)
         val = _log10(pol['bottom']) + pol['top']
         return regular_format([0, val], precision4) + "J" + comma_format(pol['height'])
-def hyper_e(x):
+def hyper_e(x, use_sign=True):
     arr = correct(x)
-    sign = "-" if arr[0][0] == 1 else ""
-    if arr[2] != 0 or arr[3] != 0: raise NotImplementedError("Hyper-e not implemented for numbers above 10{9007199254740991}10")
+    sign = "-E" if arr[0][0] == 1 else "E"
+    if use_sign == False: sign = ""
     if arr[1] == 0: arr[1] = len(arr[0])
-    if arr[1] >= 10: return sign + "E10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1]-1)
+    # FOR NUMBERS ABOVE 10{2^53-1}10 MAY BE INACCURATE
+    if arr[3] >= 10: return sign + "10000000000" + "###" + str(arr[1]) + "####" + str(arr[3]-1)
+    if arr[3] != 0: return sign + "10###" * arr[3] + hyper_e(x[0], False)
+    if arr[2] >= 10: return sign + "10000000000" + "##" + str(arr[1]) + "###" + str(arr[2]-1)
+    if arr[2] != 0: return sign + "10##" * arr[2] + hyper_e(x[0], False)
+    if arr[1] >= 10: return sign + "10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1]-1)
     arr = arr[0]
     sign = "-" if arr[0] == 1 else ""
     if len(arr) > 3:
         after = [v + 1 for v in arr[3:]]
         arr = arr[:3] + after
-    return sign + "E" + "#".join(map(str, arr[1:]))
+    return sign + "#".join(map(str, arr[1:]))
 def string(arr, top=True):
     arr = correct(arr)
     sign = "-" if arr[0][0] == 1 and top else ""
