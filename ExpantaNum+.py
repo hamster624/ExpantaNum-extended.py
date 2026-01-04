@@ -502,6 +502,7 @@ def tetration(a, r, do=False):
 def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
     r = tofloat2(r)
     t = correct(t)
+    n = correct(n)
     if eq(r, 0): return multiply(t, n)
     if eq(r, 1): return power(t, n)
     if eq(r, 2): return tetration(t, n, do=True)
@@ -519,6 +520,17 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         arrow_amount = _arrow(t,arrow_precision,n, a_arg, True, done=True)
         if eq(n,2): return [0, 10000000000] + [8] * (r-arrow_precision) + arrow_amount[-(arrow_precision):]
         return [0, 10000000000] + [8] * (r-arrow_precision) + arrow_amount[-(arrow_precision-1):]
+    if gt(maximum(t, n), [0, 9007199254740991] + [8] * (r-1)): return maximum(t, n)
+    if gt(t, [0, 9007199254740991] + [8] * (r-2)):
+        if gt(t, [0, 9007199254740991] + [8] * (r-2)):
+            a = t.copy()
+            a = a[:r]
+        elif gt(t, [0, 9007199254740991] + [8] * (r-3)): a = t[r-1]
+        else: a = [0, 0]
+        j = add(a, n)[0]
+        while len(j) <= r: j.append(0)
+        j[r] += 1
+        return j
     if s is None:
         arr_n = correct(n)[0]
         target_len = r + 2
@@ -526,17 +538,7 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         arr_res[-1] += 1
         return correct(arr_res)
 
-    if s_t is None:
-        arr_t = correct(t)[0]
-        target_len = r + 1
-        arr_res = arr_t + [0] * (target_len - len(arr_t))
-        if abs(s - round(s)) < 1e-12:
-            val = max(0, int(round(s)) - 1)
-            arr_res[-1] += val
-        else: arr_res[-1] += 1
-        return correct(arr_res)
     thr_r = [0, MAX_SAFE_INT, 1]
-
     if gte(t, thr_r) or (tofloat2(n) is None and gt(n, [0, MAX_SAFE_INT])): return maximum(t, n)
     u = math.floor(s)
     frac = s - u
