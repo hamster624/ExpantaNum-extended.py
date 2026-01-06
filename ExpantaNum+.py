@@ -101,46 +101,44 @@ def correct(x):
             mid = [8] * num_eight
             arr = arr[:2] + mid + arr[i:]
         if x[1] > MAX_SAFE_INT:
-            arr = [0, math.log10(x[1]), 1]
+            arr = [0, _log10(x[1]), 1]
             x[1] = 0
             x[2] += 1
         if x[2] != 0 and len(arr) == 2: raise ValueError("If layer is more than 0 and array is less than 2^53-1 its undefined")
         return [arr] + x[1:]
     raise TypeError("Unsupported type for correct")
-def polarize(array, smallTop=False, base=10):  
+def polarize(array, smallTop=False):
     pairs = correct(array)[0][1:]
     bottom = pairs[0]
     top = 0
     height = 0
-
     if len(pairs) <= 1:
         if smallTop:
             while bottom >= 10:
-                bottom = math.log(bottom,base)
+                bottom = _log10(bottom)
                 top += 1
                 height = 1
     else:
         elem = 1
         top = pairs[1]
         height = 1
-
         while (bottom >= 10) or (elem < len(pairs)) or (smallTop and top >= 10):
             if bottom >= 10:
                 if height == 1:
-                    bottom = math.log(bottom,base)
+                    bottom = _log10(bottom)
                     if bottom >= 10:
-                        bottom = math.log(bottom,base)
+                        bottom = _log10(bottom)
                         top += 1
                 elif height < MAX_LOGP1_REPEATS:
-                    if bottom >= 1e10: bottom = math.log(math.log(math.log(bottom,base),base),base) + 2
-                    else: bottom = math.log(math.log(bottom,base),base) + 1
+                    if bottom >= 1e10: bottom = _log10(_log10(_log10(bottom))) + 2
+                    else: bottom = _log10(_log10(bottom)) + 1
                     for _i in range(2, height):
-                        bottom = math.log(bottom,base) + 1
+                        bottom = _log10(bottom) + 1
                 else: bottom = 1
                 top += 1
             else:
                 if elem == len(pairs) - 1 and elem == height and not (smallTop and top >= 10): break
-                bottom = math.log(bottom,base) + top
+                bottom = _log10(bottom) + top
                 height += 1
                 if elem < len(pairs) and height > elem: elem += 1
                 if elem < len(pairs):
@@ -149,7 +147,7 @@ def polarize(array, smallTop=False, base=10):
                         diff = elem - height
                         if diff < MAX_LOGP1_REPEATS:
                             for _ in range(diff):
-                                bottom = math.log(bottom,base) + 1
+                                bottom = _log10(bottom) + 1
                         else: bottom = 1
                         top = pairs[elem] + 1
                     else: top = 1
@@ -158,7 +156,9 @@ def polarize(array, smallTop=False, base=10):
 def set_to_zero(x, y):
     x[y] = 0
     return x
-
+def array_search(x, y):
+    if len(x) <= y: return 0
+    return x[y]
 def comma_format(num, precision=0):
     a = correct(num)[0]
     if len(a) == 2:
@@ -279,10 +279,10 @@ def slog(x):
     if arr[1] != 0 or arr[2] != 0 or arr[3] != 0: return arr
     arr = arr[0]
     if arr[0] == 1: raise ValueError("Can't slog a negative")
-    if lte(arr, 10): return correct(math.log10(arr[1]))
-    if lte(arr, [[0, 10000000000], 0, 0]): return correct(math.log10(tofloat(log(arr))) + 1)
+    if lte(arr, 10): return correct(_log10(arr[1]))
+    if lte(arr, [[0, 10000000000], 0, 0]): return correct(_log10(tofloat(log(arr))) + 1)
     len_arr = len(arr)
-    if len_arr < 3: return correct(math.log10(tofloat(log(log(arr)))) + 2)
+    if len_arr < 3: return correct(_log10(tofloat(log(log(arr)))) + 2)
     if len_arr == 3: return correct(tofloat(slog(arr[:2])) + arr[2])
     if len_arr == 4: return correct(0, arr[1:3] + [arr[4] - 1])
     return [arr, 0, 0]
@@ -484,10 +484,10 @@ def tetration(a, r, do=False):
         raise ValueError("tetr(a, r): r is too large for iterative evaluation in this simplified implementation")
     x1 = tofloat(a)
     if x1 == None:
-        y_floor = math.floor(s)
+        y_floor = int(s)
         frac = s-y_floor
         return addlayer(multiply(power(a, frac), log(a)),y_floor)
-    y_floor = math.floor(s)
+    y_floor = int(s)
     frac = s-y_floor
     end = math.exp(frac * math.log(x1)) if frac != 0 else 1.0
     skip = 0
@@ -540,7 +540,7 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
 
     thr_r = [0, MAX_SAFE_INT, 1]
     if gte(t, thr_r) or (tofloat2(n) is None and gt(n, [0, MAX_SAFE_INT])): return maximum(t, n)
-    u = math.floor(s)
+    u = int(s)
     frac = s - u
     if frac > 1e-15: i = _arrow(t, r - 1, frac, a_arg + 1, False, done=True)
     else:
@@ -669,43 +669,43 @@ def format(num, decimals=decimals, small=False):
     elif lt(num_correct, 1000): return regular_format(n, decimals)
     elif lt(num_correct, MAX_SAFE_INT): return comma_format(n)
     elif lt(num_correct, [0, 10000000000, 3]):
-        bottom = n[1]
-        rep = n[2] - 1
+        bottom = array_search(n, 1)
+        rep = array_search(n, 2) - 1
         if bottom >= 1e9:
             bottom = _log10(bottom)
             rep += 1
-        m = 10 ** (bottom - math.floor(bottom))
-        e = math.floor(bottom)
+        m = 10 ** (bottom - int(bottom))
+        e = int(bottom)
         p = precision2 if bottom < 1_000_000 else 2
         return ("e" * int(rep)) + regular_format([0, m], p) + "e" + comma_format(e)
     pol = polarize(n)
     if lt(num_correct, [0, 10000000000, 999998]): return regular_format([0, pol['bottom']], precision3) + "F" + comma_format(pol['top'])
     elif lt(num_correct, [0, 10000000000, 8, 3]):
-        rep = n[3]
+        rep = array_search(n, 3)
         if rep >= 1:
-            n_arr = set_to_zero(n, 3)
+            n_arr = set_to_zero(n, 2)
             return ("F" * int(rep)) + format(n_arr, decimals)
-        n_val = n[2] + 1
+        n_val = array_search(n, 2) + 1
         if gte(num_correct, [0, 10, n_val]):
             n_val += 1
         return "F" + format(n_val, decimals)
     elif lt(num_correct, [0, 10000000000, 8, 999998]): return regular_format([0, pol['bottom']], precision3) + "G" + comma_format(pol['top'])
     elif lt(num_correct, [0, 10000000000, 8, 8, 3]):
-        rep = n[4]
+        rep = array_search(n, 4)
         if rep >= 1:
-            n_arr = set_to_zero(n, 4)
+            n_arr = set_to_zero(n, 3)
             return ("G" * int(rep)) + format(n_arr, decimals)
-        n_val = n[3] + 1
+        n_val = array_search(n, 3) + 1
         if gte(num_correct, [0, 10, 0, n_val]):
             n_val += 1
         return "G" + format(n_val, decimals)
     elif lt(num_correct, [0, 10000000000, 8, 8, 999998]): return regular_format([0, pol['bottom']], precision3) + "H" + comma_format(pol['top'])
     elif lt(num_correct, [0, 10000000000, 8, 8, 8, 3]):
-        rep = n[5]
+        rep = array_search(n, 5)
         if rep >= 1:
-            n_arr = set_to_zero(n, 5)
+            n_arr = set_to_zero(n, 4)
             return ("H" * int(rep)) + format(n_arr, decimals)
-        n_val = n[4] + 1
+        n_val = array_search(n, 4) + 1
         if gte(num_correct, [0, 10, 0, 0, n_val]):
             n_val += 1
         return "H" + format(n_val, decimals)
@@ -806,7 +806,7 @@ def _suffix(x, suffix_decimals=decimals):
         if num_val < 1000: 
             val = round(num_val, suffix_decimals)
             return str(int(val) if val == int(val) else val)
-        exponent = math.floor(_log10(num_val))
+        exponent = int(_log10(num_val))
         mantissa = num_val / (10 ** exponent)
         SNumber = exponent
         SNumber1 = mantissa
@@ -815,7 +815,7 @@ def _suffix(x, suffix_decimals=decimals):
         SNumber1 = 1
 
     leftover = SNumber % 3
-    SNumber = math.floor(SNumber / 3) - 1
+    SNumber = int(SNumber / 3) - 1
 
     def format_with_suffix(val, suffix):
         val_rounded = round(val, suffix_decimals)
@@ -835,9 +835,9 @@ def _suffix(x, suffix_decimals=decimals):
     txt = ""
     def suffixpart(n):
         nonlocal txt
-        Hundreds = math.floor(n / 100)
+        Hundreds = int(n / 100)
         n = n % 100
-        Tens = math.floor(n / 10)
+        Tens = int(n / 10)
         Ones = n % 10
         txt += FirstOnes[Ones]
         txt += SecondOnes[Tens]
@@ -847,9 +847,9 @@ def _suffix(x, suffix_decimals=decimals):
         nonlocal txt
         if n > 0: n += 1
         if n > 1000: n = n % 1000
-        Hundreds = math.floor(n / 100)
+        Hundreds = int(n / 100)
         n = n % 100
-        Tens = math.floor(n / 10)
+        Tens = int(n / 10)
         Ones = n % 10
         txt += FirstOnes[Ones]
         txt += SecondOnes[Tens]
@@ -862,7 +862,7 @@ def _suffix(x, suffix_decimals=decimals):
     for i in range(len(MultOnes)-1, -1, -1):
         power_val = 10 ** (i * 3)
         if SNumber >= power_val:
-            part_val = math.floor(SNumber / power_val)
+            part_val = int(SNumber / power_val)
             suffixpart2(part_val - 1)
             txt += MultOnes[i]
             SNumber = SNumber % power_val
@@ -889,8 +889,8 @@ def suffix(num, small=False):
         if bottom >= 1e9:
             bottom = _log10(bottom)
             rep += 1
-        m = 10 ** (bottom - math.floor(bottom))
-        e = math.floor(bottom)
+        m = 10 ** (bottom - int(bottom))
+        e = int(bottom)
         p = precision2
         return regular_format([0, m], p) + "e" + _suffix(e)
     elif lt(num_correct, [0, max_suffix, 3]):
@@ -899,8 +899,8 @@ def suffix(num, small=False):
         if bottom >= 1e9:
             bottom = _log10(bottom)
             rep += 1
-        m = 10 ** (bottom - math.floor(bottom))
-        e = math.floor(bottom)
+        m = 10 ** (bottom - int(bottom))
+        e = int(bottom)
         p = precision2
         return "e" + regular_format([0, m], p) + "e" + _suffix(e)
     elif lt(num_correct, [0, 10000000000, 3]):
@@ -909,8 +909,8 @@ def suffix(num, small=False):
         if bottom >= 1e9:
             bottom = _log10(bottom)
             rep += 1
-        m = 10 ** (bottom - math.floor(bottom))
-        e = math.floor(bottom)
+        m = 10 ** (bottom - int(bottom))
+        e = int(bottom)
         p = precision2
         return "ee" + regular_format([0, m], p) + "e" + _suffix(e)
     pol = polarize(n)
