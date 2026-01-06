@@ -755,10 +755,8 @@ def hyper_e(x, use_sign=True):
     if use_sign == False: sign = ""
     if arr[1] == 0: arr[1] = len(arr[0])
     # FOR NUMBERS ABOVE 10{2^53-1}10 MAY BE INACCURATE
-    if arr[3] >= 10: return sign + "10000000000" + "###" + str(arr[1]) + "####" + str(arr[3]-1)
-    if arr[3] != 0: return sign + "10###" * arr[3] + hyper_e(x[0], False)
-    if arr[2] >= 10: return sign + "10000000000" + "##" + str(arr[1]) + "###" + str(arr[2]-1)
-    if arr[2] != 0: return sign + "10##" * arr[2] + hyper_e(x[0], False)
+    if arr[3] != 0: raise NotImplementedError("Hyper_e for numbers above 10{{1}}9007199254740991 is not implemented")
+    if arr[2] != 0: return sign + "10##" + str(len(arr[0])-1) + "#" + str(arr[2]+1)
     if arr[1] >= 10: return sign + "10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1]-1)
     arr = arr[0]
     sign = "-" if arr[0] == 1 else ""
