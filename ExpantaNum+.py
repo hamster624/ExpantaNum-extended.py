@@ -414,34 +414,48 @@ def power(a, b):
 
 def factorial(n):
     n= correct(n)
+    if n[0][0] == 1: raise ValueError("Can't factorial a negative")
     if n[1] != 0 or n[2] != 0 or n[3] != 0: return n
-    n = n[0]
-    if n[0] == 1: raise ValueError("Can't factorial a negative")
-    if lte(n, [[0, 170], 0, 0, 0]): return correct(str(math.gamma(n[1] + 1)).strip("+"))
-    term1 = multiply(add(n, [[0.5], 0, 0, 0]), log(n))
-    term2 = neg(multiply(n, [[0.4342944819032518], 0, 0, 0]))
-    total_log = add(add(term1, term2), [[0.3990899341790575], 0, 0, 0])
-    return addlayer(total_log)
+    return gamma(add(n, 1))
 
 def floor(x):
     x = correct(x)
-    if x[1] != 0 or x[2] != 0 or x[3] != 0: return x
+    if x[1] != 0 or x[2] != 0: return x
     x = x[0]
-    if len(x) == 2: return correct(str(math.floor(x[1])).strip("+"))
+    if len(x) == 2: return correct(str(int(x[1])).strip("+"))
     else: return x
 
 def ceil(x):
     x = correct(x)
-    if x[1] != 0 or x[2] != 0 or x[3] != 0: return x
+    if x[1] != 0 or x[2] != 0: return x
     x = x[0]
     if len(x) == 2: return correct(str(math.ceil(x[1])).strip("+"))
     else: return x
 
 def gamma(x):
     x = correct(x)
+    if x[0][0] == 1: raise ValueError("Can't factorial a negative")
     if x[1] != 0 or x[2] != 0 or x[3] != 0: return x
-    x = x[0]
-    return factorial(subtract(x,1))
+    x0 = x[0]
+    if gt(x0, [0, MAX_SAFE_INT, 2]): return x
+    if gt(x0, [0, 15.954589770191003, 1]): return exp(x)
+    if gte(x0, MAX_SAFE_INT): return exp(multiply(x0, subtract(ln(x0), 1)))
+    n = tofloat2(x0)
+    if n <= 171: return correct(math.gamma(n))
+    t = n - 1
+    l = 0.9189385332046727  # 0.5*ln(2π)
+    l += (t + 0.5) * math.log(t)
+    l -= t
+    n2 = t * t
+    np = t
+    l += 1 / (12 * np)
+    np *= n2
+    l -= 1 / (360 * np)
+    np *= n2
+    l += 1 / (1260 * np)
+    np *= n2
+    l -= 1 / (1680 * np)
+    return exp(correct(l))
 def tetration(a, r, do=False):
     a = correct(a)
     r = correct(r)
