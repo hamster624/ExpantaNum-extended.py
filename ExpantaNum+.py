@@ -545,6 +545,7 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         while len(j) <= r: j.append(0)
         j[r] += 1
         return j
+    if r == 3 and gt(t, [0, MAX_SAFE_INT, 2]): return t[0] + [1]
     if s is None:
         arr_n = correct(n)[0]
         target_len = r + 2
