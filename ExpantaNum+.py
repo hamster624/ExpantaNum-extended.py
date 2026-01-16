@@ -535,7 +535,7 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         if eq(n,2): return [0, 10000000000] + [8] * (r-arrow_precision) + arrow_amount[-(arrow_precision):]
         return [0, 10000000000] + [8] * (r-arrow_precision) + arrow_amount[-(arrow_precision-1):]
     if gt(maximum(t, n), [0, 9007199254740991] + [8] * (r-1)): return maximum(t, n)
-    if gt(t, [0, 9007199254740991] + [8] * (r-2)):
+    if gt(t, [0, 9007199254740991] + [8] * (r-2)) or s is None:
         if gt(t, [0, 9007199254740991] + [8] * (r-2)):
             a = t.copy()
             a = a[:r]
@@ -552,7 +552,6 @@ def _arrow(t, r, n, a_arg=0, prec=precise_arrow, done=False):
         arr_res = arr_n + [0] * (target_len - len(arr_n))
         arr_res[-1] += 1
         return correct(arr_res)
-
     thr_r = [0, MAX_SAFE_INT, 1]
     if gte(t, thr_r) or (tofloat2(n) is None and gt(n, [0, MAX_SAFE_INT])): return maximum(t, n)
     u = int(s)
@@ -698,7 +697,7 @@ def format(num, decimals=decimals, small=False):
     elif lt(num_correct, [0, 10000000000, 8, 3]):
         rep = array_search(n, 3)
         if rep >= 1:
-            n_arr = set_to_zero(n, 2)
+            n_arr = set_to_zero(n, 3)
             return ("F" * int(rep)) + format(n_arr, decimals)
         n_val = array_search(n, 2) + 1
         if gte(num_correct, [0, 10, n_val]):
@@ -708,7 +707,7 @@ def format(num, decimals=decimals, small=False):
     elif lt(num_correct, [0, 10000000000, 8, 8, 3]):
         rep = array_search(n, 4)
         if rep >= 1:
-            n_arr = set_to_zero(n, 3)
+            n_arr = set_to_zero(n, 4)
             return ("G" * int(rep)) + format(n_arr, decimals)
         n_val = array_search(n, 3) + 1
         if gte(num_correct, [0, 10, 0, n_val]):
@@ -718,7 +717,7 @@ def format(num, decimals=decimals, small=False):
     elif lt(num_correct, [0, 10000000000, 8, 8, 8, 3]):
         rep = array_search(n, 5)
         if rep >= 1:
-            n_arr = set_to_zero(n, 4)
+            n_arr = set_to_zero(n, 5)
             return ("H" * int(rep)) + format(n_arr, decimals)
         n_val = array_search(n, 4) + 1
         if gte(num_correct, [0, 10, 0, 0, n_val]):
@@ -774,7 +773,6 @@ def hyper_e(x, use_sign=True):
     if arr[2] != 0: return sign + "10##" + str(len(arr[0])-1) + "#" + str(arr[2]+1)
     if arr[1] >= 10: return sign + "10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1]-1)
     arr = arr[0]
-    sign = "-" if arr[0] == 1 else ""
     if len(arr) > 3:
         after = [v + 1 for v in arr[3:]]
         arr = arr[:3] + after
@@ -931,7 +929,7 @@ def suffix(num, small=False):
     pol = polarize(n)
     if lt(num_correct, [0, 10000000000, 999998]): return regular_format([0, pol['bottom']], precision3) + "F" + _suffix(pol['top'], 0)
     elif lt(num_correct, [0, 10000000000, 8, 3]):
-        rep = n[3]
+        rep = array_search(n, 3)
         if rep >= 1:
             n_arr = set_to_zero(n, 3)
             return ("F" * int(rep)) + suffix(n_arr, decimals)
@@ -941,7 +939,7 @@ def suffix(num, small=False):
         return "F" + suffix(n_val, decimals)
     elif lt(num_correct, [0, 10000000000, 8, 999998]): return regular_format([0, pol['bottom']], precision3) + "G" + _suffix(pol['top'], 0)
     elif lt(num_correct, [0, 10000000000, 8, 8, 3]):
-        rep = n[4]
+        rep = array_search(n, 4)
         if rep >= 1:
             n_arr = set_to_zero(n, 4)
             return ("G" * int(rep)) + suffix(n_arr, decimals)
@@ -951,7 +949,7 @@ def suffix(num, small=False):
         return "G" + suffix(n_val, decimals)
     elif lt(num_correct, [0, 10000000000, 8, 8, 999998]): return regular_format([0, pol['bottom']], precision3) + "H" + _suffix(pol['top'], 0)
     elif lt(num_correct, [0, 10000000000, 8, 8, 8, 3]):
-        rep = n[5]
+        rep = array_search(n, 5)
         if rep >= 1:
             n_arr = set_to_zero(n, 5)
             return ("H" * int(rep)) + suffix(n_arr, decimals)
