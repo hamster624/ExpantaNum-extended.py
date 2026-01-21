@@ -55,7 +55,8 @@ def correct(x):
                 except ValueError: raise ValueError(f"Element at index {i} must be a number (array:{arr})")
             elif not isinstance(arr[i], (int, float)): raise ValueError(f"Element at index {i} must be a number (array:{arr})")
             if arr[i] < 0: raise ValueError(f"Element at index {i} must be positive (array:{arr})")
-        while len(arr) > 2 and arr[-1] == 0: arr.pop(-1)
+        while len(arr) > 4 and arr[-1] == 0: arr.pop(-1)
+        
         changed = True
         while changed:
             changed = False
@@ -178,12 +179,15 @@ def regular_format(num, precision):
 def compare(a, b):
     A = correct(a)
     B = correct(b)
-    if A[3] != B[3]: return 1 if A[3] > B[3] else -1
-    if A[2] != B[2]: return 1 if A[2] > B[2] else -1
-    if A[1] != B[1]: return 1 if A[1] > B[1] else -1
-    if A[3] == B[3] and A[2] == B[2] and A[1] == B[1]:
-        A = A[0]
-        B = B[0]
+    lenA = len(A)
+    lenB = len(B)
+    if lenA>lenB: return 1
+    if lenB>lenA: return -1
+    for i in range(len(A) - 1, 0, -1):
+        if A[i] != B[i]:
+            return 1 if A[i] > B[i] else -1
+    A = A[0]
+    B = B[0]
     if A[0] != B[0]: return -1 if A[0] == 1 else 1
     sign = -1 if A[0] == 1 else 1
     lenA = len(A)
@@ -229,6 +233,7 @@ def tofloat(a):
 def tofloat2(a):
     a = correct(a)
     if a[1] != 0 or a[2] != 0 or a[3] != 0: return None
+    if len(a)>4: return a
     a = a[0]
     if not len(a) == 2: return None
     return -a[1] if a[0] == 1 else a[1]
@@ -252,6 +257,7 @@ def _lambertw_float(r, tol=1e-12, max_iter=100):
 def lambertw(x):
     X = correct(x)
     if X[1] != 0 or X[2] != 0 or X[3] != 0: return X
+    if len(X)>4: return X
     x = x[0]
     if lt(X, [1, 0.3678794411714423]): raise ValueError("lambertw is unimplemented for results less than -1/e on the principal branch")
     if eq(X, 0): return [[0, 0], 0, 0, 0]
@@ -267,6 +273,7 @@ def log(x):
     arr = correct(x)
     if arr[0][0] == 1: raise ValueError("Can't log a negative")
     if arr[1] != 0 or arr[2] != 0 or arr[3] != 0: return arr
+    if len(arr)>4: return arr
     arr = arr[0]
     len_arr = len(arr)
     if len_arr == 2: return correct(_log10(arr[1]))
@@ -277,6 +284,7 @@ def log(x):
 def slog(x):
     arr = correct(x)
     if arr[1] != 0 or arr[2] != 0 or arr[3] != 0: return arr
+    if len(arr)>4: return arr
     arr = arr[0]
     if arr[0] == 1: raise ValueError("Can't slog a negative")
     if lte(arr, 10): return correct(_log10(arr[1]))
@@ -336,6 +344,8 @@ def add(a, b):
     a, b = correct(a), correct(b)
     if a[1] != 0 or a[2] != 0 or a[3] != 0: return maximum(a,b)
     if b[1] != 0 or b[2] != 0 or b[3] != 0: return maximum(a,b)
+    if len(b)>4: return maximum(a,b)
+    if len(a)>4: return maximum(a,b)
     a = a[0]
     b = b[0]
     if gt(a, [[0, MAX_SAFE_INT, 1], 0, 0, 0]) or gt(b, [[0, MAX_SAFE_INT, 1], 0, 0, 0]): return maximum(a,b)
@@ -374,6 +384,8 @@ def multiply(a, b):
     b = correct(b)
     if a[1] != 0 or a[2] != 0 or a[3] != 0: return maximum(a,b)
     if b[1] != 0 or b[2] != 0 or b[3] != 0: return maximum(a,b)
+    if len(b)>4: return maximum(a,b)
+    if len(a)>4: return maximum(a,b)
     a = a[0]
     b = b[0]
     result_sign = a[0] ^ b[0]
@@ -402,9 +414,13 @@ def power(a, b):
     b = correct(b)
     if b[0][0] == 1:
         if b[1] != 0 or b[2] != 0 or b[3] != 0: return [[0], 0, 0, 0]
+        if len(b)>4: return [[0], 0, 0, 0]
         if a[1] != 0 or a[2] != 0 or a[3] != 0: return maximum(a,b)
+        if len(a)>4: return maximum(a,b)
     if a[1] != 0 or a[2] != 0 or a[3] != 0: return maximum(a,b)
     if b[1] != 0 or b[2] != 0 or b[3] != 0: return maximum(a,b)
+    if len(b)>4: return maximum(a,b)
+    if len(a)>4: return maximum(a,b)
     a = a[0]
     b = b[0]
     if b[0] == 1 and a[0] == 0: return divide(1, power(a,neg(b)))
@@ -420,14 +436,14 @@ def factorial(n):
 
 def floor(x):
     x = correct(x)
-    if x[1] != 0 or x[2] != 0: return x
+    if x[1] != 0 or x[2] != 0 or x[3] !=0: return x
     x = x[0]
     if len(x) == 2: return correct(str(int(x[1])).strip("+"))
     else: return x
 
 def ceil(x):
     x = correct(x)
-    if x[1] != 0 or x[2] != 0: return x
+    if x[1] != 0 or x[2] != 0 or x[3] != 0: return x
     x = x[0]
     if len(x) == 2: return correct(str(math.ceil(x[1])).strip("+"))
     else: return x
@@ -436,6 +452,7 @@ def gamma(x):
     x = correct(x)
     if x[0][0] == 1: raise ValueError("Can't factorial a negative")
     if x[1] != 0 or x[2] != 0 or x[3] != 0: return x
+    if len(x)>4: return x
     x0 = x[0]
     if gt(x0, [0, MAX_SAFE_INT, 2]): return x
     if gt(x0, [0, 15.954589770191003, 1]): return exp(x)
@@ -460,7 +477,9 @@ def tetration(a, r, do=False):
     a = correct(a)
     r = correct(r)
     if a[1] != 0 or a[2] != 0 or a[3] != 0: return maximum(a,r)
+    if len(a)>4: maximum(a,r)
     if r[1] != 0 or r[2] != 0 or r[3] != 0: return maximum(a,r)
+    if len(r)>4: maximum(a,r)
     a = a[0]
     r = r[0]
     if lte(r, [[1, 2], 0, 0, 0]): raise ValueError("tetr(a, r): undefined for r <= -2 on the principal branch")
@@ -655,10 +674,31 @@ def multiexpansion(a,b):
         if eq(a,2): return [[0, 4], 0, 0, 0]
     result = [0, 0, 0, int(b-2)]
     if gt(a, MAX_SAFE_INT): result[3] += 1+a[3]
-    result[:3] = arrow(a, a, a)[:3]
+    result[:3] = expansion(a,a)[:3]
+    return result
+def expansionarrow(a,b, c):
+    a, b, c = correct(a), tofloat(b), int(tofloat2(c))
+    if c == None: raise OverflowError("expansion arrows amount is too high")
+    if c == 1: return expansion(a,b)
+    if c == 2: return multiexpansion(a,b)
+    if a[0][0] == 1 or b < 0: raise ValueError("expansionarrow undefined for negative numbers")
+    if b == 0: raise ValueError("2nd multi-expansion number can't be 0")
+    if eq(a, 1): return [[0, 1], 0, 0, 0]
+    if eq(a, 2): return [[0, 4], 0, 0, 0]
+    if eq(a, 0): return [[0, 0], 0, 0, 0]
+    if _is_int_like(b) != True: raise ValueError("2nd expansion number must be an integer")
+    b = int(b)
+    if lt(a, MAX_SAFE_INT):
+        if _is_int_like(a) != True: raise ValueError("1st expansion number must be an integer")
+    if b == 1: return a
+    if b == 2:
+        if eq(a,2): return [[0, 4], 0, 0, 0]
+    result = [int(b-2)]*(c+2)
+    if gt(a, MAX_SAFE_INT): result[c+1] += 1+a[c+1]
+    result[:2] = arrow(a,a,a)[:2]
     return result
 def logbase(a,b):
-    if lte(b, [[0, 1], 0, 0]): raise ValueError("LogBase undefined for bases under or equal to 1")
+    if lte(b, [[0, 1], 0, 0, 0]): raise ValueError("LogBase undefined for bases under or equal to 1")
     return divide(log(a),log(b))
 def ln(a): return multiply(log(a),2.302585092994046) # log10(a)/log10(e) or log10(a)*(1/log10(e))
 def sqrt(a): return root(a,2)
@@ -723,6 +763,10 @@ def format(num, decimals=decimals, small=False):
         if gte(num_correct, [0, 10, 0, 0, n_val]):
             n_val += 1
         return "H" + format(n_val, decimals)
+    elif len(num_correct)>4:
+        pol = polarize([0, 10000000000]+num_correct[2:], True)
+        val = _log10(pol["bottom"]) + pol["top"]
+        return regular_format(val,16) + "M" + comma_format(pol["height"]-1)
     elif num_correct[3] > MAX_SAFE_INT: return "L" + format(num_correct[3])
     elif num_correct[3] != 0 and num_correct[3] < 4: return "K" * num_correct[3] + format(num_correct[:3] + [0])
     elif num_correct[3] != 0 and num_correct[3] >= 4:
@@ -736,7 +780,6 @@ def format(num, decimals=decimals, small=False):
             else: bottom = _log10(nextToTopJ)
             if nextToTopJ >= 1e10: top = 2
             else: top = 1
-            print(bottom)
         return format(1+ _log10(_log10(bottom)+top),precision4) + "L" + comma_format(num_correct[3]+2)
     elif num_correct[2] > MAX_SAFE_INT: return "K" + format(num_correct[2])
     elif num_correct[2] != 0 and num_correct[2] < 4: return "J" * num_correct[2] + format(num_correct[:2] + [0])
@@ -769,6 +812,7 @@ def hyper_e(x, use_sign=True):
     if use_sign == False: sign = ""
     if arr[1] == 0: arr[1] = len(arr[0])
     # FOR NUMBERS ABOVE 10{2^53-1}10 MAY BE INACCURATE
+    if len(x)>4: raise NotImplementedError("Hyper_e for numbers above 10{{1}}9007199254740991 is not implemented")
     if arr[3] != 0: raise NotImplementedError("Hyper_e for numbers above 10{{1}}9007199254740991 is not implemented")
     if arr[2] != 0: return sign + "10##" + str(len(arr[0])-1) + "#" + str(arr[2]+1)
     if arr[1] >= 10: return sign + "10000000000" + "#" + str(arr[0][-1]) + "##" + str(arr[1]-1)
@@ -886,6 +930,7 @@ def suffix(num, small=False):
     precision3 = max(4, decimals)
     precision4 = max(6, decimals)
     num_correct = correct(num)
+    if len(num_correct)>4: raise NotImplementedError("Format not implemented for inputted number")
     n = num_correct[0]
     if len(n) == 2 and abs(n[1]) < 1e-308 and num_correct[1] != 0 and num_correct[2] != 0: return f"{0:.{decimals}f}"
     if n[0] == 1: return "-" + suffix(neg(num_correct), decimals)
@@ -999,6 +1044,7 @@ def suffix(num, small=False):
 def arrow_format(x):
     x = correct(x)
     x0 = x[0]
+    if len(x)>4: raise NotImplementedError("Format not implemented for inputted number")
     if x[3] != 0:
         if x[3] > MAX_SAFE_INT: return "10{{2}}" + str(float(x[3]))
         if x[3] < 4: return "10{{1}}" * x[3] + arrow_format(x[:3] + [0])
