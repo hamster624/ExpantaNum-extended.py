@@ -454,7 +454,6 @@ def gamma(x):
     if x[1] != 0 or x[2] != 0 or x[3] != 0: return x
     if len(x)>4: return x
     x0 = x[0]
-    if gt(x0, [0, MAX_SAFE_INT, 2]): return x
     if gt(x0, [0, 15.954589770191003, 1]): return exp(x)
     if gte(x0, MAX_SAFE_INT): return exp(multiply(x0, subtract(ln(x0), 1)))
     n = tofloat2(x0)
